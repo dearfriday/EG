@@ -102,13 +102,18 @@ BOOST_AUTO_TEST_SUITE(test_variant)
             vv["c"] = Json::Value(std::to_string(i*3));
             data[i] = vv;
         }
+
+        Json::Value vv;
+        vv["ops"] = data;
+
+//        std::cout << vv.toStyledString() << std::endl;
         test_vector tv;
-        eg::to_variant(data, tv);
+        eg::to_variant(vv, tv);
 
         for(int i = 0; i < 5; i++){
             BOOST_CHECK_EQUAL(tv.ops[i].a, i * 1);
             BOOST_CHECK_EQUAL(tv.ops[i].b, i * 2);
-            BOOST_CHECK_EQUAL(tv.ops[i].c, std::to_string(i * 2));
+            BOOST_CHECK_EQUAL(tv.ops[i].c, std::to_string(i*3));
         }
 
     }

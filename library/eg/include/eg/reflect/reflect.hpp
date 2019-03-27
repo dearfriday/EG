@@ -84,7 +84,7 @@ namespace eg {
     template<typename T>
     struct jsonValue<std::vector<T>> {
         static std::vector<T> get_value(const Json::Value &v) {
-            std::vector<T> data(v.size());
+            std::vector<T> data;
             for(auto i = 0; i < v.size(); i++){
                 data.push_back(jsonValue<T>::get_value(v[i]));
             }
