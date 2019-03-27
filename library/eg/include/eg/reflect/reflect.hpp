@@ -81,13 +81,16 @@ namespace eg {
         static std::string get_value(const Json::Value &v) { return v.asString(); }
     };
 
-//    template<typename T>
-//    struct jsonValue<std::vector<T>> {
-//        static std::vector<T> get_value(const Json::Value &v) {
-//
-//            return v.as()
-//        }
-//    };
+    template<typename T>
+    struct jsonValue<std::vector<T>> {
+        static std::vector<T> get_value(const Json::Value &v) {
+            std::vector<T> data(v.size());
+            for(auto i = 0; i < v.size(); i++){
+                data.push_back(jsonValue<T>::get_value(v[i]));
+            }
+            return data;
+        }
+    };
 
 
     template<typename T>

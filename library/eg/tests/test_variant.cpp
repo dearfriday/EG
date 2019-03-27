@@ -31,10 +31,14 @@ struct test_has {
     base_op  pp;
 };
 
-
 EG_REFLECT(test_has, (e)(pp))
 
 
+struct test_vector{
+    std::vector<base_op> ops;
+};
+
+EG_REFLECT(test_vector, (ops))
 
 
 
@@ -87,6 +91,26 @@ BOOST_AUTO_TEST_SUITE(test_variant)
         BOOST_CHECK_EQUAL(op.pp.a, 10);
         BOOST_CHECK_EQUAL(op.pp.b, 22);
         BOOST_CHECK_EQUAL(op.pp.c, "abcdef");
+    }
+
+    BOOST_AUTO_TEST_CASE(test4){
+        Json::Value data;
+        for(int i = 0; i < 5; i++){
+            Json::Value vv;
+            vv["a"] = Json::Value(i * 1);
+            vv["b"] = Json::Value(i * 2);
+            vv["c"] = Json::Value(std::to_string(i*3));
+            data[i] = vv;
+        }
+        test_vector tv;
+        eg::to_variant(data, tv);
+
+        for(int i = 0; i < 5; i++){
+            BOOST_CHECK_EQUAL(tv.ops[i].a, i * 1);
+            BOOST_CHECK_EQUAL(tv.ops[i].b, i * 2);
+            BOOST_CHECK_EQUAL(tv.ops[i].c, std::to_string(i * 2));
+        }
+
     }
 
 
