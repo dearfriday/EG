@@ -20,26 +20,25 @@ struct base_op {
 
 
 struct test_inherit : base_op {
-    int32_t  d;
+    int32_t d;
 };
 
 EG_REFLECT(base_op, (a)(b)(c))
 EG_INHERIT_REFLECT(test_inherit, (base_op), (d))
 
 struct test_has {
-    int32_t  e;
-    base_op  pp;
+    int32_t e;
+    base_op pp;
 };
 
 EG_REFLECT(test_has, (e)(pp))
 
 
-struct test_vector{
+struct test_vector {
     std::vector<base_op> ops;
 };
 
 EG_REFLECT(test_vector, (ops))
-
 
 
 BOOST_AUTO_TEST_SUITE(test_variant)
@@ -93,31 +92,43 @@ BOOST_AUTO_TEST_SUITE(test_variant)
         BOOST_CHECK_EQUAL(op.pp.c, "abcdef");
     }
 
-    BOOST_AUTO_TEST_CASE(test4){
+    BOOST_AUTO_TEST_CASE(test4) {
         Json::Value data;
-        for(int i = 0; i < 5; i++){
+        for (int i = 0; i < 5; i++) {
             Json::Value vv;
             vv["a"] = Json::Value(i * 1);
             vv["b"] = Json::Value(i * 2);
-            vv["c"] = Json::Value(std::to_string(i*3));
+            vv["c"] = Json::Value(std::to_string(i * 3));
             data[i] = vv;
         }
 
         Json::Value vv;
         vv["ops"] = data;
 
-//        std::cout << vv.toStyledString() << std::endl;
+        std::cout << vv.toStyledString() << std::endl;
         test_vector tv;
         eg::to_variant(vv, tv);
 
-        for(int i = 0; i < 5; i++){
+        for (int i = 0; i < 5; i++) {
             BOOST_CHECK_EQUAL(tv.ops[i].a, i * 1);
             BOOST_CHECK_EQUAL(tv.ops[i].b, i * 2);
-            BOOST_CHECK_EQUAL(tv.ops[i].c, std::to_string(i*3));
+            BOOST_CHECK_EQUAL(tv.ops[i].c, std::to_string(i * 3));
         }
 
     }
 
+
+    BOOST_AUTO_TEST_CASE(test5) {
+        const std::string json = "{\"ops\":[{\"a\":0,\"b\":0,\"c\":\"0\"},{\"a\":1,\"b\":2,\"c\":\"3\"},{\"a\":2,\"b\":4,\"c\":\"6\"},{\"a\":3,\"b\":6,\"c\":\"9\"},{\"a\":4,\"b\":8,\"c\":\"12\"}]}";
+        test_vector tv;
+        eg::to_variant(json, tv);
+        for (int i = 0; i < 5; i++) {
+            BOOST_CHECK_EQUAL(tv.ops[i].a, i * 1);
+            BOOST_CHECK_EQUAL(tv.ops[i].b, i * 2);
+            BOOST_CHECK_EQUAL(tv.ops[i].c, std::to_string(i * 3));
+        }
+
+    }
 
 
     BOOST_AUTO_TEST_CASE(json_test1) {
@@ -130,8 +141,6 @@ BOOST_AUTO_TEST_SUITE(test_variant)
             std::string version = root["jsonrpc"].asString();
         }
     }
-
-
 
 
 BOOST_AUTO_TEST_SUITE_END()

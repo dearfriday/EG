@@ -97,6 +97,21 @@ namespace eg {
     void to_variant(const Json::Value &v, T &t) {
         reflect<T>::from_json(v, t);
     }
+
+    template<typename T>
+    void to_variant(const std::string &json, T &t){
+        auto readerBuilder = Json::CharReaderBuilder();
+        auto sreader = readerBuilder.newCharReader();
+        Json::Value root;
+        std::string errotStr;
+        if (sreader->parse(json.c_str(), json.c_str() + json.size(), &root, &errotStr)) {
+            to_variant(root, t);
+        }
+        else{
+            std::cout << "TODO throw exception.\n";
+        }
+    }
+
 }
 
 
