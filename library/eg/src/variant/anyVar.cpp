@@ -1,0 +1,18 @@
+//
+// Created by nova on 07/04/2019.
+//
+
+#include <eg/variant/anyVar.hpp>
+
+
+namespace eg{
+
+
+
+
+    //////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////
+    any_map::any_map(const std::string &k, const object &obj):key(k), value(new object(obj)) {
+
+    }
+}
