@@ -3,144 +3,24 @@
 //
 
 #define BOOST_TEST_MODULE test_variant
-#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MAIN
+#define BOOST_TEST_STATIC_LINK
 
 #include <boost/test/unit_test.hpp>
 #include <iostream>
-
-#include <json/json.h>
-#include <eg/reflect/reflect.hpp>
+#include <eg/future.hpp>
 //using namespace eg;
 
-struct base_op {
-    uint32_t a;
-    int b;
-    std::string c;
-};
-
-
-struct test_inherit : base_op {
-    int32_t d;
-};
-
-EG_REFLECT(base_op, (a)(b)(c))
-EG_INHERIT_REFLECT(test_inherit, (base_op), (d))
-
-struct test_has {
-    int32_t e;
-    base_op pp;
-};
-
-EG_REFLECT(test_has, (e)(pp))
-
-
-struct test_vector {
-    std::vector<base_op> ops;
-};
-
-EG_REFLECT(test_vector, (ops))
 
 
 BOOST_AUTO_TEST_SUITE(test_variant)
 
     BOOST_AUTO_TEST_CASE(test1) {
-        Json::Value data;
-        data["a"] = Json::Value(10);
-        data["b"] = Json::Value(22);
-        data["c"] = Json::Value("abcdef");
-        base_op op;
-        eg::reflect<base_op>::from_json(data, op);
-
-        BOOST_CHECK_EQUAL(op.a, 10);
-        BOOST_CHECK_EQUAL(op.b, 22);
-        BOOST_CHECK_EQUAL(op.c, "abcdef");
+        eg::promise<int> p;
+        p.get_future();
     }
 
 
-    BOOST_AUTO_TEST_CASE(test2) {
-        Json::Value data;
-        data["a"] = Json::Value(10);
-        data["b"] = Json::Value(22);
-        data["c"] = Json::Value("abcdef");
-        data["d"] = Json::Value(-10);
-        test_inherit op;
-        eg::reflect<test_inherit>::from_json(data, op);
-
-        BOOST_CHECK_EQUAL(op.a, 10);
-        BOOST_CHECK_EQUAL(op.b, 22);
-        BOOST_CHECK_EQUAL(op.c, "abcdef");
-        BOOST_CHECK_EQUAL(op.d, -10);
-
-
-    }
-
-    BOOST_AUTO_TEST_CASE(test3) {
-        Json::Value data;
-        data["a"] = Json::Value(10);
-        data["b"] = Json::Value(22);
-        data["c"] = Json::Value("abcdef");
-
-        Json::Value vv;
-        vv["e"] = Json::Value(15);
-        vv["pp"] = data;
-        test_has op;
-        eg::reflect<test_has>::from_json(vv, op);
-
-        BOOST_CHECK_EQUAL(op.e, 15);
-        BOOST_CHECK_EQUAL(op.pp.a, 10);
-        BOOST_CHECK_EQUAL(op.pp.b, 22);
-        BOOST_CHECK_EQUAL(op.pp.c, "abcdef");
-    }
-
-    BOOST_AUTO_TEST_CASE(test4) {
-        Json::Value data;
-        for (int i = 0; i < 5; i++) {
-            Json::Value vv;
-            vv["a"] = Json::Value(i * 1);
-            vv["b"] = Json::Value(i * 2);
-            vv["c"] = Json::Value(std::to_string(i * 3));
-            data[i] = vv;
-        }
-
-        Json::Value vv;
-        vv["ops"] = data;
-
-        std::cout << vv.toStyledString() << std::endl;
-        test_vector tv;
-        eg::to_variant(vv, tv);
-
-        for (int i = 0; i < 5; i++) {
-            BOOST_CHECK_EQUAL(tv.ops[i].a, i * 1);
-            BOOST_CHECK_EQUAL(tv.ops[i].b, i * 2);
-            BOOST_CHECK_EQUAL(tv.ops[i].c, std::to_string(i * 3));
-        }
-
-    }
-
-
-    BOOST_AUTO_TEST_CASE(test5) {
-        const std::string json = "{\"ops\":[{\"a\":0,\"b\":0,\"c\":\"0\"},{\"a\":1,\"b\":2,\"c\":\"3\"},{\"a\":2,\"b\":4,\"c\":\"6\"},{\"a\":3,\"b\":6,\"c\":\"9\"},{\"a\":4,\"b\":8,\"c\":\"12\"}]}";
-        test_vector tv;
-        eg::to_variant(json, tv);
-        for (int i = 0; i < 5; i++) {
-            BOOST_CHECK_EQUAL(tv.ops[i].a, i * 1);
-            BOOST_CHECK_EQUAL(tv.ops[i].b, i * 2);
-            BOOST_CHECK_EQUAL(tv.ops[i].c, std::to_string(i * 3));
-        }
-
-    }
-
-
-    BOOST_AUTO_TEST_CASE(json_test1) {
-        const char *str = "{\"jsonrpc\": \"2.0\",\"method\": \"find\",\"params\": [\"1 \"]}";
-        auto readerBuilder = Json::CharReaderBuilder();
-        auto sreader = readerBuilder.newCharReader();
-        Json::Value root;
-        std::string errotStr;
-        if (sreader->parse(str, str + strlen(str), &root, &errotStr)) {
-            std::string version = root["jsonrpc"].asString();
-        }
-    }
 
 
 BOOST_AUTO_TEST_SUITE_END()
