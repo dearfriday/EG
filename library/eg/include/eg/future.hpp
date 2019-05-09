@@ -6,7 +6,7 @@
 
 
 #include <tuple>
-
+#include <assert.h>
 namespace eg {
 
     template<typename ...T>
@@ -45,6 +45,33 @@ namespace eg {
 
     }
 
+
+    template <typename T>
+    class pack_future{
+    public:
+        typedef future<T>   type;
+        typedef promise<T>  promise_type;
+        typedef std::tuple<T>  value_type;
+
+        template <typename Func, typename ...ARGS>
+        static type packed(Func &&ff, ARGS ...args){
+
+            return future<>();
+        }
+
+        template <typename Func, typename ...ARGS>
+        static type packed(Func &&ff, std::tuple<ARGS...> args){
+
+        }
+
+
+    };
+
+    template <typename T>
+    using pack_future_t = typename pack_future<T>::type;
+
+
+
     struct future_state_base {
 
         enum class state : uint8_t {
@@ -72,6 +99,8 @@ namespace eg {
         void set_exception(const std::exception_ptr &ex){
             new (&_value._ex) std::exception_ptr(ex);
         }
+
+
     };
 
 
@@ -85,6 +114,19 @@ namespace eg {
                 f.get_wrap_value().~tuple();
             }
         }
+
+        template <typename ...ARGS>
+        void set(ARGS&& ...args){
+            assert(_value._state == state::future);
+            this->set_wrap_value(std::tuple<ARGS...>(std::forward(args...)));
+            _value._state = state::result;
+        }
+
+        std::tuple<T...> get_value() &&{
+            assert(_value._state == state::result);
+            return this->get_value();
+        }
+
     };
 
 
@@ -102,6 +144,10 @@ namespace eg {
 
         }
         promise(const promise &) = delete;
+
+
+
+
 
         future<T...> get_future() noexcept{
             assert(!_future && _state);
@@ -122,12 +168,6 @@ namespace eg {
 
         }
 
-
-
-
-
-
-
         template<typename ...U>
         friend class future;
 
@@ -145,16 +185,17 @@ namespace eg {
             _promise->_state = &_state;
         }
 
-        template <typename Func, typename Result>
+
+        template <typename Func, typename Result = pack_future_t<std::result_of_t<Func(T...)>> >
         Result  then(Func &&ff){
             return then_impl(std::move(ff));
         }
 
 
     private:
-        template <typename Func, typename Result>
+        template <typename Func, typename Result = pack_future_t<std::result_of_t<Func(T...)>> >
         Result  then_impl(Func &&ff){
-
+            return pack_future<std::result_of<Func(T...)>>::packed(std::forward<Func>(ff), _state.get_value());
         }
     };
 
