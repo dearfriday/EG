@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(test_variant)
 
     BOOST_AUTO_TEST_CASE(test1) {
         eg::promise<int> p;
-        p.get_future().then([](int a){
+        p.get_future().then([](auto a){
             return 0;
         });
 

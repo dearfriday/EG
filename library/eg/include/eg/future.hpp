@@ -30,7 +30,7 @@ namespace eg {
             any _v;
 
             void set_wrap_value(T t) {
-                new(&_v._value) T(t);
+                new(&_v._value) T(std::move(t));
             }
 
             T &get_wrap_value() {
@@ -47,28 +47,30 @@ namespace eg {
 
 
     template <typename T>
-    class pack_future{
+    class future_apply{
     public:
         typedef future<T>   type;
         typedef promise<T>  promise_type;
         typedef std::tuple<T>  value_type;
 
         template <typename Func, typename ...ARGS>
-        static type packed(Func &&ff, ARGS ...args){
-
-            return future<>();
+        static type apply(Func &&ff, ARGS ...args){
+            return future<Func(ARGS...)>(ff(args...));
         }
 
         template <typename Func, typename ...ARGS>
-        static type packed(Func &&ff, std::tuple<ARGS...> args){
+        static type apply(Func &&ff, std::tuple<ARGS...> &&args){
+//            auto result = ff(args);
 
+            return future<T>();
         }
 
+//        static type result()
 
     };
 
     template <typename T>
-    using pack_future_t = typename pack_future<T>::type;
+    using pack_future_t = typename future_apply<T>::type;
 
 
 
@@ -118,13 +120,13 @@ namespace eg {
         template <typename ...ARGS>
         void set(ARGS&& ...args){
             assert(_value._state == state::future);
-            this->set_wrap_value(std::tuple<ARGS...>(std::forward(args...)));
+            this->set_wrap_value(std::tuple<ARGS...>(std::forward<ARGS>(args)...));
             _value._state = state::result;
         }
 
-        std::tuple<T...> get_value() &&{
+        std::tuple<T...>  get_value() &&  noexcept{
             assert(_value._state == state::result);
-            return this->get_value();
+            return std::move(this->get_wrap_value());
         }
 
     };
@@ -185,17 +187,42 @@ namespace eg {
             _promise->_state = &_state;
         }
 
+        template <typename ...U>
+        future(U&&...args){
+//            static_assert(std::is_same<std::remove_reference_t<U>, U>::value, "error");
+            _state.set(std::forward<U>(args)...);
+        }
+
+        template <typename ...U>
+        future(std::tuple<U...> &&args){
+            _state.set(args);
+        }
+
+
+        promise<T...> * detach_promoise(){
+            _promise->_state = nullptr;
+            _promise->_future = nullptr;
+            return std::exchange(_promise, nullptr);
+        }
+
 
         template <typename Func, typename Result = pack_future_t<std::result_of_t<Func(T...)>> >
         Result  then(Func &&ff){
             return then_impl(std::move(ff));
         }
 
+        future_state<T...> get_available_state(){
+            if(_promise){
+                detach_promoise();
+            }
+            return std::move(_state);
+        }
+
 
     private:
         template <typename Func, typename Result = pack_future_t<std::result_of_t<Func(T...)>> >
         Result  then_impl(Func &&ff){
-            return pack_future<std::result_of<Func(T...)>>::packed(std::forward<Func>(ff), _state.get_value());
+            return future_apply<std::result_of<Func(T...)>>::apply(std::forward<Func>(ff), get_available_state().get_value());
         }
     };
 
