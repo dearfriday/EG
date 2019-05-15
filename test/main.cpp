@@ -1,63 +1,48 @@
-#include <stdlib.h>
+#include <type_traits>
 #include <iostream>
-#include <tuple>
-#include <functional>
-using namespace std;
 
-//template <typename R, typename T>
-//struct tuple_to_function;
-
-//template <typename R, typename T>
-struct tuple_to_function{
-
-    template <typename TU, std::size_t t>
-    struct call{
-        template <typename Func>
-        static void exe(size_t all_size, Func f, TU tup){
-            call<TU, t - 1>::exe(all_size, f, tup, std::get<t - 1>(tup));
-        }
-
-        template <typename Func, typename ...ARGS>
-        static void exe(Func f, TU tup, ARGS ...args){
-            call<TU, t-1>::exe(f, tup, std::get< t - 1>(tup), args...);
-        }
-    };
-
-
-    template <typename TU>
-    struct call<TU, 0>{
-
-        template <typename Func, typename ...ARGS>
-        static void exe(Func f, TU tup, ARGS ...args){
-            f(args...);
-        }
-    };
-
-    template <typename R, typename T>
-    void go(T t, R r){
-        call<T, std::tuple_size<decltype(t)>::value>::exe(r, t);
-    }
-
+struct S {
+    double operator()(char, int&);
+    float operator()(int) { return 1.0;}
 };
 
+template<class T>
+typename std::result_of<T(int)>::type f(T& t)
+{
+    std::cout << "overload of f for callable T\n";
+    return t(0);
+}
+
+template<class T, class U>
+int f(U u)
+{
+    std::cout << "overload of f for non-callable T\n";
+    return u;
+}
 
 int main()
 {
+    // the result of invoking S with char and int& arguments is double
+//    std::result_of<S(char, int&)>::type d = 3.14; // d has type double
+//    static_assert(std::is_same<decltype(d), double>::value, "1111");
+//
+//    // the result of invoking S with int argument is float
+//    std::result_of<S(int)>::type x = 3.14; // x has type float
+//    static_assert(std::is_same<decltype(x), float>::value, "2222");
+//
+//    // result_of can be used with a pointer to member function as follows
+//    struct C { double Func(char, int&); };
+//    std::result_of<decltype(&C::Func)(C, char, int&)>::type g = 3.14;
+//    static_assert(std::is_same<decltype(g), double>::value, "333");
+//
+//    f<C>(1); // may fail to compile in C++11; calls the non-callable overload in C++14
+//    std::function<double(int)> f = [](int v){return 0.1f;};
+//
+//    std::result_of<decltype(f)>::value k;
 
-    tuple_to_function test;
-
-    auto r = std::tuple<int, int, int>(1, 2, 3);
-    test.go(r, [](int a, int b, int c) -> int{
-        std::cout << "a " << a << std::endl;
-        std::cout << "b " << b << std::endl;
-        std::cout << "c " << c << std::endl;
-        return 1;
-    });
 
 
 
 
 
-
-    return 0;
 }
