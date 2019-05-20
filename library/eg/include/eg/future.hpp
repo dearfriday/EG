@@ -178,6 +178,7 @@ namespace eg {
 
     private:
 
+
         template <do_now now>
         void do_set_value(std::tuple<T...> result){
             _state->set(result);
@@ -220,9 +221,18 @@ namespace eg {
 
 
     private:
+        future_state<T...> get_available_state() {
+            if(_promise){
+                //TODO exchange?
+            }
+            return std::move(_state);
+        }
+
+
+
         template <typename Func, typename Result = pack_future_t<std::result_of_t<Func(T...)>> >
         Result  then_impl(Func &&ff){
-            return pack_future<std::result_of<Func(T...)>>::packed(std::forward<Func>(ff), _state.get_value());
+            return pack_future<std::result_of<Func(T...)>>::packed(std::forward<Func>(ff), get_available_state().get_value());
         }
     };
 
