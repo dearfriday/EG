@@ -7,6 +7,7 @@
 
 #include <tuple>
 #include <assert.h>
+
 namespace eg {
 
     template<typename ...T>
@@ -30,6 +31,7 @@ namespace eg {
             any _v;
 
             void set_wrap_value(T t) {
+
                 new(&_v._value) T(t);
             }
 
@@ -53,15 +55,15 @@ namespace eg {
         typedef promise<T>  promise_type;
         typedef std::tuple<T>  value_type;
 
-        template <typename Func, typename ...ARGS>
-        static type packed(Func &&ff, ARGS ...args){
-
-            return future<>();
-        }
+//        template <typename Func, typename ...ARGS>
+//        static type packed(Func &&ff, ARGS ...args){
+//
+//            return future<std::tuple<ARGS...>>();
+//        }
 
         template <typename Func, typename ...ARGS>
         static type packed(Func &&ff, std::tuple<ARGS...> args){
-
+            return future<std::tuple<ARGS...>>();
         }
 
 
@@ -117,15 +119,24 @@ namespace eg {
 
         template <typename ...ARGS>
         void set(ARGS&& ...args){
-            assert(_value._state == state::future);
-            this->set_wrap_value(std::tuple<ARGS...>(std::forward(args...)));
+//            assert(_value._state == state::future);
+            this->set_wrap_value(args...);
             _value._state = state::result;
         }
 
+//        template <typename ...ARGS>
+//        void set(std::tuple<ARGS...> &&value){
+//            assert(_value._state == state::future);
+//            this->set_wrap_value(std::tuple<ARGS...>(value));
+//            _value._state = state::result;
+//        }
+
         std::tuple<T...> get_value() &&{
-            assert(_value._state == state::result);
-            return this->get_value();
+//            assert(_value._state == state::result);
+            return std::move(this->get_wrap_value());
         }
+
+
 
     };
 
@@ -160,11 +171,22 @@ namespace eg {
             do_set_value<do_now::no>(result);
         }
 
+        void set_value(T &&... args){
+            do_set_value<do_now::no>(args...);
+        }
+
 
     private:
 
         template <do_now now>
         void do_set_value(std::tuple<T...> result){
+            _state->set(result);
+
+        }
+
+        template <do_now now>
+        void do_set_value(T&&... result){
+            _state->set(result...);
 
         }
 
@@ -183,6 +205,11 @@ namespace eg {
         future(promise<T...> *pt):_promise(pt), _state(std::move(pt->_local_state)){
             _promise->_future = this;
             _promise->_state = &_state;
+        }
+
+
+        future_state<T...> get_avaliable_state(){
+            return std::move(_state);
         }
 
 
