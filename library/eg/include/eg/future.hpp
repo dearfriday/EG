@@ -61,9 +61,13 @@ namespace eg {
 //            return future<std::tuple<ARGS...>>();
 //        }
 
+
+
+
+
         template <typename Func, typename ...ARGS>
-        static type packed(Func &&ff, std::tuple<ARGS...> args){
-            return future<std::tuple<ARGS...>>();
+        static type packed(Func &&ff, std::tuple<ARGS...> &&args){
+            return future<std::tuple<ARGS...>>(ff(args));
         }
 
 
@@ -188,7 +192,7 @@ namespace eg {
         template <do_now now>
         void do_set_value(T&&... result){
             _state->set(result...);
-
+            assert(_future != nullptr);
         }
 
         template<typename ...U>
@@ -232,7 +236,7 @@ namespace eg {
 
         template <typename Func, typename Result = pack_future_t<std::result_of_t<Func(T...)>> >
         Result  then_impl(Func &&ff){
-            return pack_future<std::result_of<Func(T...)>>::packed(std::forward<Func>(ff), get_available_state().get_value());
+            return pack_future<std::result_of<Func(T...)>>::packed(ff, get_available_state().get_value());
         }
     };
 
