@@ -17,6 +17,8 @@ namespace eg {
     class promise;
 
 
+    struct make_ready_future{};
+
     namespace internal {
 
         template<typename T>
@@ -62,12 +64,9 @@ namespace eg {
 //        }
 
 
-
-
-
         template <typename Func, typename ...ARGS>
         static type packed(Func &&ff, std::tuple<ARGS...> &&args){
-            return future<std::tuple<ARGS...>>(ff(args));
+            return future<T>(make_ready_future(), ff(args));
         }
 
 
@@ -128,12 +127,12 @@ namespace eg {
             _value._state = state::result;
         }
 
-//        template <typename ...ARGS>
-//        void set(std::tuple<ARGS...> &&value){
+        template <typename ...ARGS>
+        void set(std::tuple<ARGS...> &&value){
 //            assert(_value._state == state::future);
-//            this->set_wrap_value(std::tuple<ARGS...>(value));
-//            _value._state = state::result;
-//        }
+            this->set_wrap_value(std::tuple<ARGS...>(value));
+            _value._state = state::result;
+        }
 
         std::tuple<T...> get_value() &&{
 //            assert(_value._state == state::result);
@@ -212,6 +211,10 @@ namespace eg {
             _promise->_state = &_state;
         }
 
+        template <typename ...ARGS>
+        future(make_ready_future, ARGS ...args){
+            _state.set(args...);
+        }
 
         future_state<T...> get_avaliable_state(){
             return std::move(_state);
@@ -236,7 +239,7 @@ namespace eg {
 
         template <typename Func, typename Result = pack_future_t<std::result_of_t<Func(T...)>> >
         Result  then_impl(Func &&ff){
-            return pack_future<std::result_of<Func(T...)>>::packed(ff, get_available_state().get_value());
+            return pack_future<std::result_of_t<Func(T...)>>::packed(ff, get_available_state().get_value());
         }
     };
 
