@@ -4,20 +4,23 @@
 
 #define BOOST_TEST_MODULE test_variant
 #define BOOST_TEST_MAIN
-#define BOOST_TEST_STATIC_LINK
+#define BOOST_TEST_DYN_LINK
 
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <eg/future.hpp>
+#include <tuple>
 //using namespace eg;
 
 
-
+//
 BOOST_AUTO_TEST_SUITE(test_variant)
 
     BOOST_AUTO_TEST_CASE(test1) {
         eg::promise<int> p;
+
         p.get_future().then([](auto a){
+//            std::cout << std::get<0>(a) << std::endl;
             return 0;
         });
 
