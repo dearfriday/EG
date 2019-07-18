@@ -17,7 +17,11 @@ find_package(Boost 1.60 REQUIRED COMPONENTS
 
 #include(CMakeModules/Findjsoncpp.cmake)
 
-add_library(eg include/eg/future.hpp src/future.cpp)
+add_library(eg
+        include/eg/future.hpp
+        include/eg/task.hpp
+        include/eg/type.hpp
+        src/future.cpp)
 target_include_directories(eg PUBLIC ${JSONCPP_INCLUDE_DIR})
 
 
